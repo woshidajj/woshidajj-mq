@@ -2,21 +2,25 @@ package msgqueue
 
 import (
 	"fmt"
-	handler2 "github.com/woshidajj/woshidajj-mq/msgqueue/handler"
+	"github.com/woshidajj/woshidajj-mq/msgqueue/handler"
+)
+
+const (
+	msgCacheLen = 10
 )
 
 type subscriber struct {
-	topic   string
-	msgC    chan interface{}
-	ExitC   chan struct{}
-	handler handler2.MsgHandler
+	topic      string
+	msgC       chan interface{}
+	ExitC      chan struct{}
+	msgHandler handler.MsgHandler
 }
 
-func NewSubscriber(topic string, handler handler2.MsgHandler) *subscriber {
+func NewSubscriber(topic string, msgHandler handler.MsgHandler) *subscriber {
 
-	msgC := make(chan interface{}, 10)
+	msgC := make(chan interface{}, msgCacheLen)
 	exitC := make(chan struct{})
-	s := &subscriber{msgC: msgC, ExitC: exitC, topic: topic, handler: handler}
+	s := &subscriber{msgC: msgC, ExitC: exitC, topic: topic, msgHandler: msgHandler}
 
 	go s.start()
 
@@ -28,7 +32,7 @@ func (s *subscriber) start() {
 	for {
 		select {
 		case msg := <-s.msgC:
-			s.handler.HandleMsg(msg)
+			s.msgHandler.HandleMsg(msg)
 		case <-s.ExitC:
 			fmt.Printf("subscriber(%p) is closed \n", s)
 			return

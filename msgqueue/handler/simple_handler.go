@@ -15,7 +15,7 @@ func (h *SimpleHandler) HandleMsg(m interface{}) error {
 		fmt.Println("----------end-----------")
 	} else {
 		fmt.Println("----------start-----------")
-		fmt.Println("INVALID M \n")
+		fmt.Println("INVALID M")
 		fmt.Println("----------end-----------")
 	}
 

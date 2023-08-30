@@ -22,14 +22,14 @@ func (h *RemoteHandler) HandleMsg(m interface{}) error {
 		b, err := v.ToBytes()
 		if err != nil {
 			fmt.Println("----------start-----------")
-			fmt.Println("CHANGE BYTE FAIL \n")
+			fmt.Println("CHANGE BYTE FAIL")
 			fmt.Println("----------end-----------")
 			return err
 		}
 		h.conn.Write(b)
 	} else {
 		fmt.Println("----------start-----------")
-		fmt.Println("INVALID M \n")
+		fmt.Println("INVALID M")
 		fmt.Println("----------end-----------")
 	}
 

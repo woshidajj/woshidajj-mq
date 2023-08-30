@@ -30,7 +30,6 @@ func main() {
 
 		time.Sleep(time.Second * 10)
 	*/
-
 	s, err := msgqueueremote.NewServer()
 
 	if err != nil {

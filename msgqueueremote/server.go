@@ -19,7 +19,7 @@ const (
 	routePub       = "/pub"
 	queryTopic     = "t"
 	queryMsg       = "m"
-	connectSuccMSg = "200 Connected to Woshidajj Msg Queue\n\n"
+	connectSuccMSg = "200 Connected to Woshidajj Msg Queue"
 )
 
 type Server struct {
@@ -84,7 +84,7 @@ func (server *Server) handleHttpSub(w http.ResponseWriter, req *http.Request) {
 
 	defer server.mq.Unsubscribe(suber)
 
-	io.WriteString(conn, "HTTP/1.0 "+connectSuccMSg)
+	io.WriteString(conn, "HTTP/1.0 "+connectSuccMSg+"\n\n")
 
 	runSuber(conn, suber.ExitC)
 
