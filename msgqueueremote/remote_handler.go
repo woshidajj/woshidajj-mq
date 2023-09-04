@@ -3,18 +3,13 @@ package msgqueueremote
 import (
 	"fmt"
 	"net"
-	"sync"
 )
 
 type RemoteHandler struct {
 	conn net.Conn
-	sync.RWMutex
 }
 
 func (h *RemoteHandler) HandleMsg(m interface{}) error {
-
-	h.Lock()
-	defer h.Unlock()
 
 	v, ok := m.(Payload)
 
