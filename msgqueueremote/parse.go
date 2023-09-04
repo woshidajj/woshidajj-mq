@@ -69,7 +69,7 @@ func (p *Payload) ToBytes() ([]byte, error) {
 
 }
 
-func ParseStream(rawReader io.Reader, ch chan<- *Payload) {
+func ParseStream(rawReader io.Reader, ch chan<- *Payload, stopC chan struct{}) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println(err, string(debug.Stack()))
@@ -79,6 +79,13 @@ func ParseStream(rawReader io.Reader, ch chan<- *Payload) {
 	reader := bufio.NewReader(rawReader)
 
 	for {
+
+		select {
+		// wait for exit signal
+		case <-stopC:
+			return
+		default:
+		}
 
 		payload, hasbody, err := parseCommand(reader)
 

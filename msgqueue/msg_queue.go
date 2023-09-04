@@ -35,6 +35,9 @@ func (mq *MsgQueue) Subscribe(suber *subscriber) (*subscriber, error) {
 	llist, _ := mq.topics.LoadOrStore(suber.topic, nlist)
 	tlist := llist.(*topicList)
 	tlist.subscribe(suber)
+
+	go suber.start()
+
 	return suber, nil
 }
 
@@ -66,7 +69,7 @@ func (mq *MsgQueue) Close() {
 		tlist := value.(*topicList)
 
 		for _, suber := range tlist.subers {
-			suber.close()
+			mq.Unsubscribe(suber)
 		}
 
 		return true
@@ -79,6 +82,9 @@ func (mq *MsgQueue) Unsubscribe(suber *subscriber) error {
 	if suber == nil {
 		return nil
 	}
+
+	// 先关闭订阅者，退出协程
+	suber.close()
 
 	select {
 	// wait for exit signal

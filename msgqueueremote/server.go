@@ -2,7 +2,6 @@ package msgqueueremote
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"github.com/woshidajj/woshidajj-mq/msgqueue"
 	"io"
@@ -23,18 +22,13 @@ const (
 )
 
 type Server struct {
-	mq *msgqueue.MsgQueue
+	address string
+	mq      *msgqueue.MsgQueue
 }
 
-func NewServer() (*Server, error) {
+func NewServer(address string, mq *msgqueue.MsgQueue) (*Server, error) {
 
-	mq, err := msgqueue.NewMsgQueue()
-
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("new mq fail, %s", err))
-	}
-
-	s := &Server{mq: mq}
+	s := &Server{address: address, mq: mq}
 
 	return s, nil
 }
@@ -108,11 +102,11 @@ func (server *Server) handleHttpPub(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "publish-"+topic+"-"+msg)
 }
 
-func (server *Server) Start(address string) error {
+func (server *Server) Start() error {
 	http.HandleFunc(routeSub, server.handleHttpSub)
 	http.HandleFunc(routePub, server.handleHttpPub)
 
-	listener, err := net.Listen("tcp", address)
+	listener, err := net.Listen("tcp", server.address)
 
 	if err != nil {
 		log.Fatal("启动服务监听失败:", err)
@@ -131,7 +125,8 @@ func runSuber(conn net.Conn, exitC chan struct{}) {
 
 	reader := bufio.NewReader(conn)
 	payloadC := make(chan *Payload)
-	go ParseStream(reader, payloadC)
+	stopC := make(chan struct{})
+	go ParseStream(reader, payloadC, stopC)
 
 	// 定时器，定时检测上次接收到PONG的时间
 	idleDuration := pongDuration
@@ -150,7 +145,7 @@ func runSuber(conn net.Conn, exitC chan struct{}) {
 			}
 
 			if p.Err != nil {
-				fmt.Printf("RECV CLIENT ERR %s  \n", p.Err)
+				fmt.Printf("RECV CLIENT ERR %s \n", p.Err)
 			} else if p.Command == cmdPong {
 				// 重置
 				pong = 0
@@ -161,12 +156,16 @@ func runSuber(conn net.Conn, exitC chan struct{}) {
 			// 超过5次没收到PONG，关闭用户
 			if pong > pongLimit {
 				fmt.Printf("CLIENT TIME UP \n")
+				// 关闭parse协程
+				close(stopC)
 				return
 			} else {
 				pong++
 			}
 		case <-exitC:
 			fmt.Println("SUBER EXIT")
+			// 关闭parse协程
+			close(stopC)
 			return
 		}
 	}

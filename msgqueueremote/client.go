@@ -42,7 +42,8 @@ func (c *client) Run() {
 
 	reader := bufio.NewReader(c.conn)
 	payloadC := make(chan *Payload)
-	go ParseStream(reader, payloadC)
+	stopC := make(chan struct{})
+	go ParseStream(reader, payloadC, stopC)
 
 	// 定时器，定时检测上次接收到PONG的时间
 	idleDuration := pongDuration
@@ -57,6 +58,7 @@ func (c *client) Run() {
 			// chan被关闭，退出
 			if !ok {
 				fmt.Printf("plC chan close \n")
+				close(stopC)
 				return
 			}
 
@@ -77,6 +79,7 @@ func (c *client) Run() {
 			b, _ := sp.ToBytes()
 			_, err := c.conn.Write(b)
 			if err != nil {
+				close(stopC)
 				fmt.Printf("sth wrong %s \n", err)
 			}
 
