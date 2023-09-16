@@ -3,12 +3,12 @@ package msgqueueremote
 import (
 	"bufio"
 	"fmt"
+	"github.com/woshidajj/woshidajj-mq/msgqueue"
 	"io"
 	"log"
 	"net"
 	"net/http"
 	"time"
-	"woshidajj-actor-mq/msgqueue"
 )
 
 const (
